@@ -1,37 +1,37 @@
 import pandas as pd
-import sqlite3
-from datetime import datetime
+import json
+import sys
+from utils.data_cleaner import clean_sales_data
+from utils.db_loader import load_to_postgres
 
-def clean_data(df):
-    # Drop rows with missing essential values
-    df.dropna(subset=["date", "product", "quantity", "price"], inplace=True)
+def read_csv(path):
+    print(f"📥 Reading CSV: {path}")
+    return pd.read_csv(path)
 
-    # Convert data types
-    df['date'] = pd.to_datetime(df['date'], errors='coerce')
-    df['quantity'] = df['quantity'].astype(int)
-    df['price'] = df['price'].astype(float)
-
-    # Drop rows with invalid dates
-    df.dropna(subset=["date"], inplace=True)
-
-    return df
-
-def load_to_db(df, db_name="sales.db", table_name="sales"):
-    conn = sqlite3.connect(db_name)
-    df.to_sql(table_name, conn, if_exists="replace", index=False)
-    conn.close()
-    print(f"Data loaded to {db_name} in table '{table_name}'.")
+def read_json(path):
+    print(f"📥 Reading JSON: {path}")
+    with open(path, "r") as f:
+        data = json.load(f)
+    return pd.DataFrame(data)
 
 def main():
-    # Step 1: Extract
-    csv_file = "sales.csv"
-    df = pd.read_csv(csv_file)
+    if len(sys.argv) < 2:
+        print("❗ Usage: python pipeline.py <data_file> [table_name]")
+        sys.exit(1)
 
-    # Step 2: Transform
-    df_clean = clean_data(df)
+    file_path = sys.argv[1]
+    table_name = sys.argv[2] if len(sys.argv) > 2 else "sales"
 
-    # Step 3: Load
-    load_to_db(df_clean)
+    if file_path.endswith(".csv"):
+        df = read_csv(file_path)
+    elif file_path.endswith(".json"):
+        df = read_json(file_path)
+    else:
+        print("❗ Supported formats: .csv, .json")
+        sys.exit(1)
+
+    df_clean = clean_sales_data(df)
+    load_to_postgres(df_clean, table_name)
 
 if __name__ == "__main__":
     main()
