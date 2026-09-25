@@ -1,14 +1,14 @@
 import pandas as pd
 import psycopg2
-from psycopg2.extras import execute_values
+import os
 
 def load_to_postgres(df: pd.DataFrame, table_name="sales"):
     conn = psycopg2.connect(
-        dbname="salesdb",
-        user="your_user",
-        password="your_password",
-        host="localhost",
-        port="5432"
+        dbname=os.getenv('PGDATABASE', 'salesdb'),
+        user=os.getenv('PGUSER'),
+        password=os.getenv('PGPASSWORD'),
+        host=os.getenv('PGHOST', 'localhost'),
+        port=os.getenv('PGPORT', '5432')
     )
     cursor = conn.cursor()
 
