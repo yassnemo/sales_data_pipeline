@@ -22,10 +22,13 @@ def load_to_postgres(df: pd.DataFrame, table_name="sales"):
     """)
     conn.commit()
 
-    for _, row in df.iterrows():
-        cursor.execute(
-            f"INSERT INTO {table_name} (date, product, quantity, price) VALUES (%s, %s, %s, %s);",
-            (row["date"], row["product"], row["quantity"], row["price"])
+    rows = list(df[['date', 'product', 'quantity', 'price']].itertuples(index=False, name=None))
+    if rows:
+        execute_values(
+            cursor,
+            f"INSERT INTO {table_name} (date, product, quantity, price) VALUES %s;",
+            rows,
+            page_size=1000,
         )
     conn.commit()
     conn.close()
