@@ -12,7 +12,14 @@ def read_json(path):
     print(f"📥 Reading JSON: {path}")
     with open(path, "r") as f:
         data = json.load(f)
+    if not isinstance(data, list) or not all(isinstance(row, dict) for row in data):
+        raise ValueError('JSON input must be an array of sales objects')
     return pd.DataFrame(data)
+
+def read_json_lines(path):
+    print(f"Reading JSON Lines: {path}")
+    return pd.read_json(path, lines=True)
+
 
 def main():
     if len(sys.argv) < 2:
@@ -26,8 +33,10 @@ def main():
         df = read_csv(file_path)
     elif file_path.endswith(".json"):
         df = read_json(file_path)
+    elif file_path.endswith(".jsonl"):
+        df = read_json_lines(file_path)
     else:
-        print("❗ Supported formats: .csv, .json")
+        print("❗ Supported formats: .csv, .json, .jsonl")
         sys.exit(1)
 
     df_clean = clean_sales_data(df)
