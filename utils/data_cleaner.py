@@ -6,4 +6,5 @@ def clean_sales_data(df: pd.DataFrame) -> pd.DataFrame:
     df.dropna(subset=["date"], inplace=True)
     df['quantity'] = df['quantity'].astype(int)
     df['price'] = df['price'].astype(float)
+    df = df.loc[df['price'] >= 0].copy()
     return df
